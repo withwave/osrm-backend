@@ -77,7 +77,9 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
-        this.child = this.scope.runBin('osrm-routed', util.format("%s -p %d", this.inputFile, this.scope.OSRM_PORT), this.scope.environment, (err) => {
+        let command_arguments = util.format('%s -p %d', this.inputFile, this.scope.OSRM_PORT);
+        command_arguments += this.scope.ROUTING_ALGORITHM.length > 0 ? ' --algorithm ' + this.scope.ROUTING_ALGORITHM : '';
+        this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
                 throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
@@ -115,7 +117,9 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback();
 
-        this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT), this.scope.environment, (err) => {
+        let command_arguments = util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT);
+        command_arguments += this.scope.ROUTING_ALGORITHM.length > 0 ? ' --algorithm ' + this.scope.ROUTING_ALGORITHM : '';
+        this.child = this.scope.runBin('osrm-routed', command_arguments, this.scope.environment, (err) => {
             if (err && err.signal !== 'SIGINT') {
                 this.child = null;
                 throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));

@@ -207,6 +207,7 @@ script:
   - ./unit_tests/partition-tests
   - popd
   - npm test
+  - node ./node_modules/cucumber/bin/cucumber.js features/ -p mld
 
 after_success:
   - |
