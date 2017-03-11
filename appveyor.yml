@@ -28,6 +28,7 @@ before_test:
   - SET PATH=%CD%\osrm-deps\libs\bin;%PATH%
   - SET OSRM_BUILD_DIR=build\%Configuration%
   - npm test
+  - node ./node_modules/cucumber/bin/cucumber.js features/ -p mld
 
 artifacts:
   - path: osrm_Release.zip
