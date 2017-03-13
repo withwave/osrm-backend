@@ -126,16 +126,11 @@ InternalRouteResult directShortestPathSearch(
 
 template <>
 InternalRouteResult directShortestPathSearch(
-    SearchEngineData &engine_working_data,
+    SearchEngineData & /*engine_working_data*/,
     const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
     const PhantomNodes &phantom_nodes)
 {
-    engine_working_data.InitializeOrClearMultiLayerDijkstraThreadLocalStorage(
-        facade.GetNumberOfNodes());
-    auto &forward_heap = *(engine_working_data.mld_forward_heap);
-    auto &reverse_heap = *(engine_working_data.mld_reverse_heap);
-    forward_heap.Clear();
-    reverse_heap.Clear();
+    mld::MultiLayerDijkstraHeap forward_heap, reverse_heap;
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
     const auto &partition = facade.GetMultiLevelPartition();

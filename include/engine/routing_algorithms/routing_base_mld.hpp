@@ -6,6 +6,7 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
 
+#include "util/search_heap.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -19,12 +20,29 @@ namespace routing_algorithms
 namespace mld
 {
 
+struct HeapData
+{
+    NodeID parent;
+    LevelID level;  // node level: always increasing along the path starting from 0
+    EdgeID edge_id; // edge id if parent -> node is a boundary edge
+    HeapData(NodeID parent) : parent(parent), level(0), edge_id(SPECIAL_EDGEID) {}
+    HeapData(NodeID parent, LevelID level) : parent(parent), level(level), edge_id(SPECIAL_EDGEID)
+    {
+    }
+    HeapData(NodeID parent, LevelID level, EdgeID edge_id)
+        : parent(parent), level(level), edge_id(edge_id)
+    {
+    }
+};
+
+using MultiLayerDijkstraHeap = util::SearchHeap<NodeID, EdgeWeight, HeapData>;
+
 template <bool DIRECTION>
 void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
                  const partition::MultiLevelPartitionView &partition,
                  const partition::CellStorageView &cells,
-                 SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
-                 SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
+                 MultiLayerDijkstraHeap &forward_heap,
+                 MultiLayerDijkstraHeap &reverse_heap,
                  const std::pair<LevelID, CellID> &parent_cell,
                  NodeID &middle_node,
                  EdgeWeight &path_upper_bound,
@@ -160,8 +178,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
 auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
             const partition::MultiLevelPartitionView &partition,
             const partition::CellStorageView &cells,
-            SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
-            SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
+            MultiLayerDijkstraHeap &forward_heap,
+            MultiLayerDijkstraHeap &reverse_heap,
             const std::pair<LevelID, CellID> &parent_cell)
 {
     // run two-Target Dijkstra routing step.
