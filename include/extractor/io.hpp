@@ -4,6 +4,7 @@
 #include "extractor/datasources.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/segment_data_container.hpp"
+#include "extractor/restriction.hpp"
 
 #include "storage/io.hpp"
 
@@ -32,6 +33,7 @@ inline void write(const boost::filesystem::path &path, const std::vector<NBGToEB
     reader.SerializeVector(mapping);
 }
 
+// read/write for datasources file
 inline void read(const boost::filesystem::path &path, Datasources &sources)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
@@ -48,6 +50,7 @@ inline void write(const boost::filesystem::path &path, Datasources &sources)
     writer.WriteFrom(sources);
 }
 
+// read/write for segment data file
 template <>
 inline void read(const boost::filesystem::path &path, SegmentDataContainer &segment_data)
 {
@@ -96,6 +99,41 @@ inline void write(const boost::filesystem::path &path, const SegmentDataContaine
     writer.WriteFrom(segment_data.rev_durations);
     writer.WriteFrom(segment_data.datasources);
 }
+
+// read/write for conditional turn restrictions file
+inline void read(const boost::filesystem::path &path, std::vector<InputRestrictionContainer> &restrictions)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    auto num_indices = reader.ReadElementCount64();
+    restrictions.resize(num_indices);
+    while (num_indices > 0)
+    {
+        InputRestrictionContainer restriction;
+        bool is_only;
+        reader.ReadInto(restriction.restriction.via);
+        reader.ReadInto(restriction.restriction.from);
+        reader.ReadInto(restriction.restriction.to);
+        reader.ReadInto(is_only);
+        reader.ReadInto(restriction.restriction.condition);
+        restriction.restriction.flags.is_only = is_only;
+
+        restrictions.push_back(restriction);
+        num_indices--;
+    }
+}
+
+inline void write(storage::io::FileWriter &writer, const InputRestrictionContainer &container)
+{
+    writer.WriteOne(container.restriction.via);
+    writer.WriteOne(container.restriction.from);
+    writer.WriteOne(container.restriction.to);
+    writer.WriteOne(container.restriction.flags.is_only);
+    // condition is a string
+    writer.WriteFrom(container.restriction.condition);
+}
+
 }
 }
 }
