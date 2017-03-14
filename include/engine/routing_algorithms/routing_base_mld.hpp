@@ -103,8 +103,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                     }
                     else if (to_weight < forward_heap.GetKey(to))
                     {
-                        forward_heap.GetData(to) = {node, level};
-                        forward_heap.DecreaseKey(to, to_weight);
+                        forward_heap.DecreaseKey(to, to_weight, {node, level});
                         update_upper_bounds(to, weight, shortcut_weight);
                     }
                 }
@@ -130,8 +129,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                     }
                     else if (to_weight < forward_heap.GetKey(to))
                     {
-                        forward_heap.GetData(to) = {node, level};
-                        forward_heap.DecreaseKey(to, to_weight);
+                        forward_heap.DecreaseKey(to, to_weight, {node, level});
                         update_upper_bounds(to, weight, shortcut_weight);
                     }
                 }
@@ -166,8 +164,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                 }
                 else if (to_weight < forward_heap.GetKey(to))
                 {
-                    forward_heap.GetData(to) = {node, to_level, edge};
-                    forward_heap.DecreaseKey(to, to_weight);
+                    forward_heap.DecreaseKey(to, to_weight, {node, to_level, edge});
                     update_upper_bounds(to, weight, edge_data.weight);
                 }
             }
@@ -271,8 +268,7 @@ auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD>
             BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
 
             // Here heaps can be reused, let's go deeper!
-            forward_heap.Clear();
-            reverse_heap.Clear();
+            MultiLayerDijkstraHeap forward_heap, reverse_heap;
             forward_heap.Insert(source, 0, {source, sublevel});
             reverse_heap.Insert(target, 0, {target, sublevel});
 

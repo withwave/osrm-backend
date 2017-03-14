@@ -2,10 +2,9 @@
 #define OSRM_UTIL_SEARCH_HEAP_HPP
 
 #include <boost/heap/d_ary_heap.hpp>
-
-#include <deque>
-#include <type_traits>
-#include <unordered_map>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index_container.hpp>
 
 namespace osrm
 {
@@ -18,11 +17,7 @@ template <typename NodeID, typename Weight, typename Data = void> struct SearchH
     using WeightType = Weight;
     using DataType = Data;
 
-    struct NodeData;
-    using DataContainer = std::deque<NodeData>;
-    using DataReference = typename std::add_pointer<typename DataContainer::reference>::type;
-    using DataIndex = std::unordered_map<NodeID, DataReference>;
-    using HeapData = std::pair<WeightType, DataReference>;
+    using HeapData = std::pair<WeightType, NodeID>;
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
@@ -36,18 +31,17 @@ template <typename NodeID, typename Weight, typename Data = void> struct SearchH
         DataType data;
         HeapHandle handle;
     };
+    using DataIndex = boost::multi_index::indexed_by<
+        boost::multi_index::hashed_unique<BOOST_MULTI_INDEX_MEMBER(NodeData, NodeID, node)>>;
+    using DataContainer = boost::multi_index_container<NodeData, DataIndex>;
 
     DataContainer data;
-    DataIndex index;
     HeapContainer heap;
 
-    SearchHeap() { index.rehash(10000); }
-
-    SearchHeap(size_t) : SearchHeap() {}
+    SearchHeap() {}
 
     void Clear()
     {
-        index.clear();
         heap.clear();
         data.clear();
     }
@@ -58,37 +52,17 @@ template <typename NodeID, typename Weight, typename Data = void> struct SearchH
 
     void Insert(NodeID node, WeightType weight, DataType node_data)
     {
-        data.emplace_back(NodeData{node, weight, std::move(node_data), HeapHandle()});
-        auto reference = &data.back();
-        reference->handle = heap.push(std::make_pair(weight, reference));
-        index.insert(std::make_pair(node, reference));
+        auto handle = heap.push(std::make_pair(weight, node));
+        data.insert(NodeData{node, weight, std::move(node_data), handle});
     }
 
-    DataType const &GetData(NodeID node) const
-    {
-        BOOST_ASSERT(WasInserted(node));
-        return index.find(node)->second->data;
-    }
+    DataType const &GetData(NodeID node) const { return data.find(node)->data; }
 
-    DataType &GetData(NodeID node)
-    {
-        BOOST_ASSERT(WasInserted(node));
-        return index.find(node)->second->data;
-    }
+    WeightType const &GetKey(NodeID node) const { return data.find(node)->weight; }
 
-    WeightType const &GetKey(NodeID node) const
-    {
-        BOOST_ASSERT(WasInserted(node));
-        return index.find(node)->second->weight;
-    }
+    bool WasRemoved(const NodeID node) const { return data.find(node)->handle == HeapHandle(); }
 
-    bool WasRemoved(const NodeID node) const
-    {
-        BOOST_ASSERT(WasInserted(node));
-        return index.find(node)->second->handle == HeapHandle();
-    }
-
-    bool WasInserted(const NodeID node) const { return index.find(node) != index.end(); }
+    bool WasInserted(const NodeID node) const { return data.find(node) != data.end(); }
 
     WeightType MinKey() const
     {
@@ -99,32 +73,35 @@ template <typename NodeID, typename Weight, typename Data = void> struct SearchH
     NodeID Min() const
     {
         BOOST_ASSERT(!heap.empty());
-        return heap.top().second->node;
+        return heap.top().second;
     }
 
     NodeID DeleteMin()
     {
         BOOST_ASSERT(!heap.empty());
-        BOOST_ASSERT(heap.top().first == heap.top().second->weight);
-        auto node_data = heap.top().second;
-        heap.pop();
 
-        node_data->handle = HeapHandle();
-        return node_data->node;
+        auto node = heap.top().second;
+        heap.pop();
+        data.modify(data.find(node), [&](auto &d) { d.handle = HeapHandle(); });
+
+        return node;
     }
 
     void DeleteAll()
     {
-        std::for_each(data.begin(), data.end(), [](auto &node) { node.handle = HeapHandle(); });
+        for (auto it = data.begin(); it != data.end(); ++it)
+            data.modify(it, [&](auto &d) { d.handle = HeapHandle(); });
         heap.clear();
     }
 
-    void DecreaseKey(NodeID node, WeightType weight)
+    void DecreaseKey(NodeID node, WeightType weight, DataType node_data)
     {
-        BOOST_ASSERT(WasInserted(node));
-        auto reference = index.find(node)->second;
-        reference->weight = weight;
-        heap.increase(reference->handle, std::make_pair(weight, reference));
+        auto reference = data.find(node);
+        heap.increase(reference->handle, std::make_pair(weight, node));
+        data.modify(reference, [&](auto &d) {
+            d.weight = weight;
+            d.data = node_data;
+        });
     }
 };
 }

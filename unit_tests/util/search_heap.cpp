@@ -52,7 +52,7 @@ constexpr unsigned NUM_NODES = 100;
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(insert_test, T, weight_types, RandomDataFixture<NUM_NODES>)
 {
-    SearchHeap<TestNodeID, T, TestData> heap(NUM_NODES);
+    SearchHeap<TestNodeID, T, TestData> heap;
 
     TestWeight min_weight = std::numeric_limits<TestWeight>::max();
     TestNodeID min_id;
@@ -85,7 +85,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(insert_test, T, weight_types, RandomDataFixture
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_min_test, T, weight_types, RandomDataFixture<NUM_NODES>)
 {
-    SearchHeap<TestNodeID, T, TestData> heap(NUM_NODES);
+    SearchHeap<TestNodeID, T, TestData> heap;
 
     for (unsigned idx : order)
     {
@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_min_test, T, weight_types, RandomDataFix
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_all_test, T, weight_types, RandomDataFixture<NUM_NODES>)
 {
-    SearchHeap<TestNodeID, T, TestData> heap(NUM_NODES);
+    SearchHeap<TestNodeID, T, TestData> heap;
 
     for (unsigned idx : order)
     {
@@ -121,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_all_test, T, weight_types, RandomDataFix
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, weight_types, RandomDataFixture<10>)
 {
-    SearchHeap<TestNodeID, T, TestData> heap(10);
+    SearchHeap<TestNodeID, T, TestData> heap;
 
     for (unsigned idx : order)
     {
@@ -139,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, weight_types, RandomDataF
         // decrease weight until we reach min weight
         while (weights[id] > min_weight)
         {
-            heap.DecreaseKey(id, weights[id]);
+            heap.DecreaseKey(id, weights[id], {0});
             BOOST_CHECK_EQUAL(heap.Min(), min_id);
             BOOST_CHECK_EQUAL(heap.MinKey(), min_weight);
             weights[id]--;
@@ -147,7 +147,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, weight_types, RandomDataF
 
         // make weight smaller than min
         weights[id] -= 2;
-        heap.DecreaseKey(id, weights[id]);
+        heap.DecreaseKey(id, weights[id], {0});
         BOOST_CHECK_EQUAL(heap.Min(), id);
         BOOST_CHECK_EQUAL(heap.MinKey(), weights[id]);
     }
