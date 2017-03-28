@@ -28,9 +28,9 @@ inline void read(const boost::filesystem::path &path, std::vector<NBGToEBG> &map
 inline void write(const boost::filesystem::path &path, const std::vector<NBGToEBG> &mapping)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter reader{path, fingerprint};
+    storage::io::FileWriter writer{path, fingerprint};
 
-    reader.SerializeVector(mapping);
+    writer.SerializeVector(mapping);
 }
 
 // read/write for datasources file
@@ -110,16 +110,21 @@ inline void read(const boost::filesystem::path &path, std::vector<InputRestricti
     restrictions.resize(num_indices);
     while (num_indices > 0)
     {
-        InputRestrictionContainer restriction;
+        InputRestrictionContainer res;
         bool is_only;
-        reader.ReadInto(restriction.restriction.via);
-        reader.ReadInto(restriction.restriction.from);
-        reader.ReadInto(restriction.restriction.to);
+        reader.ReadInto(res.restriction.via);
+        reader.ReadInto(res.restriction.from);
+        reader.ReadInto(res.restriction.to);
         reader.ReadInto(is_only);
-        reader.ReadInto(restriction.restriction.condition);
-        restriction.restriction.flags.is_only = is_only;
-
-        restrictions.push_back(restriction);
+        for (auto &c : res.restriction.condition)
+        {
+            reader.ReadInto(c.modifier);
+            reader.DeserializeVector(c.times);
+            reader.DeserializeVector(c.weekdays);
+            reader.DeserializeVector(c.monthdays);
+        }
+        res.restriction.flags.is_only = is_only;
+        restrictions.push_back(res);
         num_indices--;
     }
 }
@@ -130,8 +135,13 @@ inline void write(storage::io::FileWriter &writer, const InputRestrictionContain
     writer.WriteOne(container.restriction.from);
     writer.WriteOne(container.restriction.to);
     writer.WriteOne(container.restriction.flags.is_only);
-    // condition is a string
-    writer.WriteFrom(container.restriction.condition);
+    for (auto &c : container.restriction.condition)
+    {
+        writer.WriteFrom(c.modifier);
+        writer.SerializeVector(c.times);
+        writer.SerializeVector(c.weekdays);
+        writer.SerializeVector(c.monthdays);
+    }
 }
 
 }
