@@ -225,6 +225,10 @@ script:
   - ./unit_tests/partition-tests
   - popd
   - yarn test
+  - |
+    if [ -n "${ENABLE_NODE_BINDINGS}" ]; then
+      npm run nodejs-tests
+    fi
 
 after_success:
   - |
