@@ -228,10 +228,10 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorit
     }
 }
 
-template <typename AlgorithmT>
+template <typename Algorithm>
 InternalRouteResult
 shortestPathSearchImpl(SearchEngineData &engine_working_data,
-                       const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
+                       const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                        const std::vector<PhantomNodes> &phantom_nodes_vector,
                        const boost::optional<bool> continue_straight_at_waypoint)
 {
@@ -241,7 +241,8 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
         !(continue_straight_at_waypoint ? *continue_straight_at_waypoint
                                         : facade.GetContinueStraightDefault());
 
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{},
+                                                                 facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
     QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);

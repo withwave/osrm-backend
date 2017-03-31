@@ -575,7 +575,8 @@ alternativePathSearch(SearchEngineData &engine_working_data,
     std::vector<SearchSpaceEdge> reverse_search_space;
 
     // Init queues, semi-expensive because access to TSS invokes a sys-call
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{},
+                                                                 facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearThirdThreadLocalStorage(facade.GetNumberOfNodes());
 

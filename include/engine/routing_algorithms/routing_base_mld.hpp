@@ -285,8 +285,8 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
 
 inline double
 getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                   SearchEngineData::QueryHeap &forward_heap,
-                   SearchEngineData::QueryHeap &reverse_heap,
+                   SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
+                   SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
                    SearchEngineData::QueryHeap &forward_core_heap,
                    SearchEngineData::QueryHeap &reverse_core_heap,
                    const PhantomNode &source_phantom,

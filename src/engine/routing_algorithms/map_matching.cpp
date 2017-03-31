@@ -48,15 +48,14 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 }
 }
 
-template <typename AlgorithmT>
-SubMatchingList
-mapMatching(SearchEngineData &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
-            const CandidateLists &candidates_list,
-            const std::vector<util::Coordinate> &trace_coordinates,
-            const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool allow_splitting)
+template <typename Algorithm>
+SubMatchingList mapMatching(SearchEngineData &engine_working_data,
+                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                            const CandidateLists &candidates_list,
+                            const std::vector<util::Coordinate> &trace_coordinates,
+                            const std::vector<unsigned> &trace_timestamps,
+                            const std::vector<boost::optional<double>> &trace_gps_precision,
+                            const bool allow_splitting)
 {
     map_matching::MatchingConfidence confidence;
     map_matching::EmissionLogProbability default_emission_log_probability(DEFAULT_GPS_PRECISION);
@@ -142,11 +141,12 @@ mapMatching(SearchEngineData &engine_working_data,
         return sub_matchings;
     }
 
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
-    engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
+    const auto nodes_number = facade.GetNumberOfNodes();
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{}, nodes_number);
+    engine_working_data.InitializeOrClearSecondThreadLocalStorage(nodes_number);
 
-    auto &forward_heap = *(engine_working_data.forward_heap_1);
-    auto &reverse_heap = *(engine_working_data.reverse_heap_1);
+    auto &forward_heap = *engine_working_data.GetForwardHeapPtr(Algorithm{});
+    auto &reverse_heap = *engine_working_data.GetReverseHeapPtr(Algorithm{});
     auto &forward_core_heap = *(engine_working_data.forward_heap_2);
     auto &reverse_core_heap = *(engine_working_data.reverse_heap_2);
 
