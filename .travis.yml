@@ -223,12 +223,18 @@ script:
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
   - ./unit_tests/partition-tests
-  - popd
-  - yarn test
   - |
     if [ -n "${ENABLE_NODE_BINDINGS}" ]; then
+
+      echo ">>> symbol-tag-node-osrm"
+      nm -D ../lib/binding/node-osrm.node | c++filt
+      echo ">>> symbol-tag-libosrm"
+      nm libosrm.a | c++filt
+
       npm run nodejs-tests
     fi
+  - popd
+  - yarn test
 
 after_success:
   - |
