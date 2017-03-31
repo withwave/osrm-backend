@@ -168,13 +168,13 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<AlgorithmT>::MapMat
     const std::vector<boost::optional<double>> &trace_gps_precision,
     const bool allow_splitting) const
 {
-    return routing_algorithms::ch::mapMatching(heaps,
-                                               facade,
-                                               candidates_list,
-                                               trace_coordinates,
-                                               trace_timestamps,
-                                               trace_gps_precision,
-                                               allow_splitting);
+    return routing_algorithms::mapMatching(heaps,
+                                           facade,
+                                           candidates_list,
+                                           trace_coordinates,
+                                           trace_timestamps,
+                                           trace_gps_precision,
+                                           allow_splitting);
 }
 
 template <typename AlgorithmT>
