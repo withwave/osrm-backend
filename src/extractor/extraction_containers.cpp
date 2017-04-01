@@ -137,7 +137,6 @@ void ExtractionContainers::FlushVectors()
     all_edges_list.flush();
     name_char_data.flush();
     name_offsets.flush();
-    restrictions_list.flush();
     way_start_end_id_list.flush();
 }
 
@@ -682,8 +681,7 @@ void ExtractionContainers::PrepareRestrictions()
         TIMER_START(sort_restrictions);
         stxxl::sort(restrictions_list.begin(),
                     restrictions_list.end(),
-                    CmpRestrictionContainerByFrom(),
-                    stxxl_memory);
+                    CmpRestrictionContainerByFrom());
         TIMER_STOP(sort_restrictions);
         log << "ok, after " << TIMER_SEC(sort_restrictions) << "s";
     }
@@ -777,10 +775,9 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting restrictions. by to  ... " << std::flush;
         TIMER_START(sort_restrictions_to);
-        stxxl::sort(restrictions_list.begin(),
+        std::sort(restrictions_list.begin(),
                     restrictions_list.end(),
-                    CmpRestrictionContainerByTo(),
-                    stxxl_memory);
+                    CmpRestrictionContainerByTo());
         TIMER_STOP(sort_restrictions_to);
         log << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s";
     }
