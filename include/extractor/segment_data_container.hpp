@@ -15,6 +15,15 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace extractor
 {
 
@@ -25,13 +34,13 @@ namespace detail
 template <bool UseShareMemory> class SegmentDataContainerImpl;
 }
 
-namespace io
+namespace serialization
 {
 template <bool UseShareMemory>
-inline void read(const boost::filesystem::path &path,
+inline void read(storage::io::FileReader &reader,
                  detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
 template <bool UseShareMemory>
-inline void write(const boost::filesystem::path &path,
+inline void write(storage::io::FileWriter &writer,
                   const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
 }
 
@@ -189,10 +198,10 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
     friend void
-    io::read<UseShareMemory>(const boost::filesystem::path &path,
+    serialization::read<UseShareMemory>(storage::io::FileReader &reader,
                              detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
     friend void
-    io::write<UseShareMemory>(const boost::filesystem::path &path,
+    serialization::write<UseShareMemory>(storage::io::FileWriter &writer,
                               const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
 
   private:
