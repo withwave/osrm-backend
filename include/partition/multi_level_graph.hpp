@@ -12,17 +12,26 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace partition
 {
 template <typename EdgeDataT, bool UseSharedMemory> class MultiLevelGraph;
 
-namespace io
+namespace serialization
 {
 template <typename EdgeDataT, bool UseSharedMemory>
-void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
+void read(storage::io::FileReader &reader, MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
 
 template <typename EdgeDataT, bool UseSharedMemory>
-void write(const boost::filesystem::path &path,
+void write(storage::io::FileWriter &writer,
            const MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
 }
 
@@ -190,10 +199,10 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
     }
 
     friend void
-    io::read<EdgeDataT, UseSharedMemory>(const boost::filesystem::path &path,
+    serialization::read<EdgeDataT, UseSharedMemory>(storage::io::FileReader &reader,
                                          MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
     friend void
-    io::write<EdgeDataT, UseSharedMemory>(const boost::filesystem::path &path,
+    serialization::write<EdgeDataT, UseSharedMemory>(storage::io::FileWriter &writer,
                                           const MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
 
     Vector<EdgeOffset> node_to_edge_offset;

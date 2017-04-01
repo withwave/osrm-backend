@@ -22,6 +22,15 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace partition
 {
 namespace detail
@@ -31,13 +40,12 @@ template <bool UseShareMemory> class CellStorageImpl;
 using CellStorage = detail::CellStorageImpl<false>;
 using CellStorageView = detail::CellStorageImpl<true>;
 
-namespace io
+namespace serialization
 {
 template <bool UseShareMemory>
-inline void read(const boost::filesystem::path &path,
-                 detail::CellStorageImpl<UseShareMemory> &storage);
+inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<UseShareMemory> &storage);
 template <bool UseShareMemory>
-inline void write(const boost::filesystem::path &path,
+inline void write(storage::io::FileWriter &writer,
                   const detail::CellStorageImpl<UseShareMemory> &storage);
 }
 
@@ -88,10 +96,9 @@ template <bool UseShareMemory> class CellStorageImpl
                                                              WeightValueT,
                                                              boost::random_access_traversal_tag>
         {
-            typedef boost::iterator_facade<ColumnIterator,
-                                           WeightValueT,
-                                           boost::random_access_traversal_tag>
-                base_t;
+            typedef boost::
+                iterator_facade<ColumnIterator, WeightValueT, boost::random_access_traversal_tag>
+                    base_t;
 
           public:
             typedef typename base_t::value_type value_type;
@@ -350,10 +357,12 @@ template <bool UseShareMemory> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    friend void io::read<UseShareMemory>(const boost::filesystem::path &path,
-                                         detail::CellStorageImpl<UseShareMemory> &storage);
-    friend void io::write<UseShareMemory>(const boost::filesystem::path &path,
-                                          const detail::CellStorageImpl<UseShareMemory> &storage);
+    friend void
+    serialization::read<UseShareMemory>(storage::io::FileReader &reader,
+                                        detail::CellStorageImpl<UseShareMemory> &storage);
+    friend void
+    serialization::write<UseShareMemory>(storage::io::FileWriter &writer,
+                                         const detail::CellStorageImpl<UseShareMemory> &storage);
 
   private:
     Vector<EdgeWeight> weights;
