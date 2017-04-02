@@ -1,8 +1,8 @@
 #ifndef SHARED_MEMORY_VECTOR_WRAPPER_HPP
 #define SHARED_MEMORY_VECTOR_WRAPPER_HPP
 
-#include "util/log.hpp"
 #include "util/exception.hpp"
+#include "util/log.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -85,7 +85,7 @@ template <typename DataT> class vector_view
     // operations on this object
     void resize(std::size_t size) const
     {
-        if(m_size != size)
+        if (m_size != size)
         {
             throw util::exception("Invalid resize on immutable shared memory vector.");
         }
@@ -137,8 +137,7 @@ template <typename DataT> class vector_view
 
     auto data() const { return m_ptr; }
 
-    template <typename T>
-    friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
+    template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
 
 template <> class vector_view<bool>
@@ -174,13 +173,11 @@ template <> class vector_view<bool>
 
     bool operator[](const unsigned index) const { return at(index); }
 
-    template <typename T>
-    friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
+    template <typename T> friend void swap(vector_view<T> &, vector_view<T> &) noexcept;
 };
 
 // Both vector_view<T> and the vector_view<bool> specializations share this impl.
-template <typename DataT>
-void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
+template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
 {
     std::swap(lhs.m_ptr, rhs.m_ptr);
     std::swap(lhs.m_size, rhs.m_size);
@@ -188,11 +185,9 @@ void swap(vector_view<DataT> &lhs, vector_view<DataT> &rhs) noexcept
 
 template <typename DataT, bool UseSharedMemory> struct ShM
 {
-    using vector = typename std::conditional<UseSharedMemory,
-                                             vector_view<DataT>,
-                                             std::vector<DataT>>::type;
+    using vector =
+        typename std::conditional<UseSharedMemory, vector_view<DataT>, std::vector<DataT>>::type;
 };
-
 }
 }
 

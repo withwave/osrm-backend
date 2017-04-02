@@ -198,12 +198,10 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
         node_to_edge_offset.push_back(mlp.GetNumberOfLevels());
     }
 
-    friend void
-    serialization::read<EdgeDataT, UseSharedMemory>(storage::io::FileReader &reader,
-                                         MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
-    friend void
-    serialization::write<EdgeDataT, UseSharedMemory>(storage::io::FileWriter &writer,
-                                          const MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
+    friend void serialization::read<EdgeDataT, UseSharedMemory>(
+        storage::io::FileReader &reader, MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
+    friend void serialization::write<EdgeDataT, UseSharedMemory>(
+        storage::io::FileWriter &writer, const MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph);
 
     Vector<EdgeOffset> node_to_edge_offset;
 };

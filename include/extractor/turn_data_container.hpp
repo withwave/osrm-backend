@@ -69,6 +69,8 @@ template <bool UseShareMemory> class TurnDataContainerImpl
 
     EntryClassID GetEntryClassID(const EdgeID id) const { return entry_class_ids[id]; }
 
+    extractor::TravelMode GetTravelMode(const EdgeID id) const { return travel_modes[id]; }
+
     util::guidance::TurnBearing GetPreTurnBearing(const EdgeID id) const
     {
         return pre_turn_bearings[id];
@@ -78,6 +80,8 @@ template <bool UseShareMemory> class TurnDataContainerImpl
     {
         return post_turn_bearings[id];
     }
+
+    LaneDataID GetLaneDataID(const EdgeID id) const { return lane_data_ids[id]; }
 
     bool HasLaneData(const EdgeID id) const { return INVALID_LANE_DATAID != lane_data_ids[id]; }
 
@@ -109,11 +113,12 @@ template <bool UseShareMemory> class TurnDataContainerImpl
         post_turn_bearings.push_back(post_turn_bearing);
     }
 
-    friend void serialization::read<UseShareMemory>(storage::io::FileReader &reader,
-                                    TurnDataContainerImpl<UseShareMemory> &turn_data_container);
     friend void
-    serialization::write<UseShareMemory>(storage::io::FileWriter &writer,
-                         const TurnDataContainerImpl<UseShareMemory> &turn_data_container);
+    serialization::read<UseShareMemory>(storage::io::FileReader &reader,
+                                        TurnDataContainerImpl<UseShareMemory> &turn_data_container);
+    friend void serialization::write<UseShareMemory>(
+        storage::io::FileWriter &writer,
+        const TurnDataContainerImpl<UseShareMemory> &turn_data_container);
 
   private:
     Vector<GeometryID> geometry_ids;

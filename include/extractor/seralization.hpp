@@ -38,7 +38,8 @@ inline void write(storage::io::FileWriter &writer, Datasources &sources)
 }
 
 template <bool UseShareMemory>
-inline void read(storage::io::FileReader &reader, detail::SegmentDataContainerImpl<UseShareMemory> &segment_data)
+inline void read(storage::io::FileReader &reader,
+                 detail::SegmentDataContainerImpl<UseShareMemory> &segment_data)
 {
     auto num_indices = reader.ReadElementCount32();
     segment_data.index.resize(num_indices);
@@ -61,7 +62,8 @@ inline void read(storage::io::FileReader &reader, detail::SegmentDataContainerIm
 }
 
 template <bool UseShareMemory>
-inline void write(storage::io::FileWriter &writer, const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data)
+inline void write(storage::io::FileWriter &writer,
+                  const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data)
 {
     writer.WriteElementCount32(segment_data.index.size());
     writer.WriteFrom(segment_data.index);
@@ -80,8 +82,9 @@ inline void write(storage::io::FileWriter &writer, const detail::SegmentDataCont
     writer.WriteFrom(segment_data.datasources);
 }
 
-template<bool UseShareMemory>
-inline void read(storage::io::FileReader &reader, detail::TurnDataContainerImpl<UseShareMemory> &turn_data_container)
+template <bool UseShareMemory>
+inline void read(storage::io::FileReader &reader,
+                 detail::TurnDataContainerImpl<UseShareMemory> &turn_data_container)
 {
     reader.DeserializeVector(turn_data_container.geometry_ids);
     reader.DeserializeVector(turn_data_container.name_ids);
@@ -93,8 +96,9 @@ inline void read(storage::io::FileReader &reader, detail::TurnDataContainerImpl<
     reader.DeserializeVector(turn_data_container.post_turn_bearings);
 }
 
-template<bool UseShareMemory>
-inline void write(storage::io::FileWriter &writer, const detail::TurnDataContainerImpl<UseShareMemory> &turn_data_container)
+template <bool UseShareMemory>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::TurnDataContainerImpl<UseShareMemory> &turn_data_container)
 {
     writer.SerializeVector(turn_data_container.geometry_ids);
     writer.SerializeVector(turn_data_container.name_ids);
@@ -105,7 +109,6 @@ inline void write(storage::io::FileWriter &writer, const detail::TurnDataContain
     writer.SerializeVector(turn_data_container.pre_turn_bearings);
     writer.SerializeVector(turn_data_container.post_turn_bearings);
 }
-
 }
 }
 }

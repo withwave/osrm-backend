@@ -197,12 +197,12 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     auto GetNumberOfGeometries() const { return index.size() - 1; }
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
-    friend void
-    serialization::read<UseShareMemory>(storage::io::FileReader &reader,
-                             detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
-    friend void
-    serialization::write<UseShareMemory>(storage::io::FileWriter &writer,
-                              const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+    friend void serialization::read<UseShareMemory>(
+        storage::io::FileReader &reader,
+        detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+    friend void serialization::write<UseShareMemory>(
+        storage::io::FileWriter &writer,
+        const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
 
   private:
     Vector<std::uint32_t> index;

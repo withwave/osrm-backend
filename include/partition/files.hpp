@@ -15,7 +15,7 @@ namespace files
 // reads .osrm.mldgr file
 template <typename EdgeDataT, bool UseSharedMemory>
 inline void readGraph(const boost::filesystem::path &path,
-                 MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph)
+                      MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -23,10 +23,10 @@ inline void readGraph(const boost::filesystem::path &path,
     serialization::read(reader, graph);
 }
 
-    // writes .osrm.mldgr file
+// writes .osrm.mldgr file
 template <typename EdgeDataT, bool UseSharedMemory>
 inline void writeGraph(const boost::filesystem::path &path,
-                  const MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph)
+                       const MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
