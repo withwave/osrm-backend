@@ -1,7 +1,6 @@
 #include "storage/storage.hpp"
 
 #include "storage/io.hpp"
-#include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
@@ -63,7 +62,7 @@ namespace storage
 {
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode = util::StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, true>::TreeNode;
+using RTreeNode = util::StaticRTree<RTreeLeaf, true>::TreeNode;
 using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 
 using Monitor = SharedMonitor<SharedDataTimestamp>;
@@ -278,9 +277,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        // allocate space in shared memory for profile properties
-        const auto properties_size = serialization::readPropertiesCount();
-        layout.SetBlockSize<extractor::ProfileProperties>(DataLayout::PROPERTIES, properties_size);
+        layout.SetBlockSize<extractor::ProfileProperties>(DataLayout::PROPERTIES, 1);
     }
 
     // read timestampsize
@@ -320,14 +317,14 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load coordinate size
     {
-        io::FileReader node_file(config.nodes_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader node_file(config.nodes_data_path, io::FileReader::VerifyFingerprint);
         const auto coordinate_list_size = node_file.ReadElementCount64();
         layout.SetBlockSize<util::Coordinate>(DataLayout::COORDINATE_LIST, coordinate_list_size);
         // we'll read a list of OSM node IDs from the same data, so set the block size for the same
         // number of items:
         layout.SetBlockSize<std::uint64_t>(
             DataLayout::OSM_NODE_ID_LIST,
-            util::PackedVector<OSMNodeID>::elements_to_blocks(coordinate_list_size));
+            util::PackedVectorView<OSMNodeID>::elements_to_blocks(coordinate_list_size));
     }
 
     // load geometries sizes
@@ -686,20 +683,15 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Loading list of coordinates
     {
-        io::FileReader nodes_file(config.nodes_data_path, io::FileReader::HasNoFingerprint);
-        nodes_file.Skip<std::uint64_t>(1); // node_count
         const auto coordinates_ptr =
             layout.GetBlockPtr<util::Coordinate, true>(memory_ptr, DataLayout::COORDINATE_LIST);
         const auto osmnodeid_ptr =
             layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::OSM_NODE_ID_LIST);
-        util::PackedVector<OSMNodeID, true> osmnodeid_list;
+        util::vector_view<util::Coordinate> coordinates(coordinates_ptr, layout.num_entries[DataLayout::COORDINATE_LIST]);
+        util::PackedVectorView<OSMNodeID> osm_node_ids;
+        osm_node_ids.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
 
-        osmnodeid_list.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
-
-        serialization::readNodes(nodes_file,
-                                 coordinates_ptr,
-                                 osmnodeid_list,
-                                 layout.num_entries[DataLayout::COORDINATE_LIST]);
+        extractor::files::readNodes<true>(config.nodes_data_path, coordinates, osm_node_ids);
     }
 
     // load turn weight penalties
