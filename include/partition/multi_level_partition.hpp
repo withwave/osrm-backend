@@ -69,8 +69,10 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         std::array<LevelID, NUM_PARTITION_BITS> bit_to_level;
         std::array<std::uint32_t, MAX_NUM_LEVEL - 1> lidx_to_children_offsets;
     };
+    using LevelDataPtr =
+        typename std::conditional<UseShareMemory, LevelData *, std::unique_ptr<LevelData>>::type;
 
-    MultiLevelPartitionImpl() = default;
+    MultiLevelPartitionImpl();
 
     // cell_sizes is index by level (starting at 0, the base graph).
     // However level 0 always needs to have cell size 1, since it is the
@@ -84,7 +86,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
     }
 
     template <typename = typename std::enable_if<UseShareMemory>>
-    MultiLevelPartitionImpl(LevelData level_data,
+    MultiLevelPartitionImpl(LevelDataPtr level_data,
                             Vector<PartitionID> partition_,
                             Vector<CellID> cell_to_children_)
         : level_data(std::move(level_data)), partition(std::move(partition_)),
@@ -97,8 +99,8 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
     {
         auto p = partition[node];
         auto lidx = LevelIDToIndex(l);
-        auto masked = p & level_data.lidx_to_mask[lidx];
-        return masked >> level_data.lidx_to_offset[lidx];
+        auto masked = p & level_data->lidx_to_mask[lidx];
+        return masked >> level_data->lidx_to_offset[lidx];
     }
 
     LevelID GetQueryLevel(NodeID start, NodeID target, NodeID node) const
@@ -113,10 +115,10 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
             return 0;
 
         auto msb = util::msb(partition[first] ^ partition[second]);
-        return level_data.bit_to_level[msb];
+        return level_data->bit_to_level[msb];
     }
 
-    std::uint8_t GetNumberOfLevels() const { return level_data.num_level; }
+    std::uint8_t GetNumberOfLevels() const { return level_data->num_level; }
 
     std::uint32_t GetNumberOfCells(LevelID level) const
     {
@@ -128,7 +130,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
     {
         BOOST_ASSERT(level > 1);
         auto lidx = LevelIDToIndex(level);
-        auto offset = level_data.lidx_to_children_offsets[lidx];
+        auto offset = level_data->lidx_to_children_offsets[lidx];
         return cell_to_children[offset + cell];
     }
 
@@ -137,7 +139,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
     {
         BOOST_ASSERT(level > 1);
         auto lidx = LevelIDToIndex(level);
-        auto offset = level_data.lidx_to_children_offsets[lidx];
+        auto offset = level_data->lidx_to_children_offsets[lidx];
         return cell_to_children[offset + cell + 1];
     }
 
@@ -153,7 +155,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         auto offsets = MakeLevelOffsets(lidx_to_num_cells);
         auto masks = MakeLevelMasks(offsets, num_level);
         auto bits = MakeBitToLevel(offsets, num_level);
-        return LevelData{num_level, offsets, masks, bits, {0}};
+        return std::make_unique<LevelData>(LevelData{num_level, offsets, masks, bits, {0}});
     }
 
     inline std::size_t LevelIDToIndex(LevelID l) const { return l - 1; }
@@ -167,8 +169,8 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
     {
         auto lidx = LevelIDToIndex(l);
 
-        auto shifted_id = cell_id << level_data.lidx_to_offset[lidx];
-        auto cleared_cell = partition[node] & ~level_data.lidx_to_mask[lidx];
+        auto shifted_id = cell_id << level_data->lidx_to_offset[lidx];
+        auto cleared_cell = partition[node] & ~level_data->lidx_to_mask[lidx];
         partition[node] = cleared_cell | shifted_id;
     }
 
@@ -296,13 +298,13 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
             level--;
         }
 
-        level_data.lidx_to_children_offsets[0] = 0;
+        level_data->lidx_to_children_offsets[0] = 0;
 
         for (auto level_idx = 0UL; level_idx < partitions.size() - 1; ++level_idx)
         {
             const auto &parent_partition = partitions[level_idx + 1];
 
-            level_data.lidx_to_children_offsets[level_idx + 1] = cell_to_children.size();
+            level_data->lidx_to_children_offsets[level_idx + 1] = cell_to_children.size();
 
             CellID last_parent_id = parent_partition[permutation.front()];
             cell_to_children.push_back(GetCell(level_idx + 1, permutation.front()));
@@ -321,11 +323,18 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         }
     }
 
-    //! this is always owned by this class because it is so small
-    LevelData level_data;
+    LevelDataPtr level_data;
     Vector<PartitionID> partition;
     Vector<CellID> cell_to_children;
 };
+
+template <>
+inline MultiLevelPartitionImpl<false>::MultiLevelPartitionImpl()
+    : level_data(std::make_unique<LevelData>())
+{
+}
+
+template <> inline MultiLevelPartitionImpl<true>::MultiLevelPartitionImpl() : level_data(nullptr) {}
 }
 }
 }

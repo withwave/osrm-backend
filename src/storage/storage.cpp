@@ -12,6 +12,7 @@
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
 #include "partition/multi_level_partition.hpp"
+#include "partition/files.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
@@ -895,27 +896,30 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         // Loading MLD Data
         if (boost::filesystem::exists(config.mld_partition_path))
         {
-            auto mld_level_data_ptr =
-                layout.GetBlockPtr<partition::MultiLevelPartition::LevelData, true>(
-                    memory_ptr, DataLayout::MLD_LEVEL_DATA);
-            auto mld_partition_ptr =
-                layout.GetBlockPtr<PartitionID, true>(memory_ptr, DataLayout::MLD_PARTITION);
-            auto mld_chilren_ptr =
-                layout.GetBlockPtr<CellID, true>(memory_ptr, DataLayout::MLD_CELL_TO_CHILDREN);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0);
 
-            io::FileReader reader(config.mld_partition_path, io::FileReader::VerifyFingerprint);
+            auto level_data =
+                layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData, true>(
+                    memory_ptr, storage::DataLayout::MLD_LEVEL_DATA);
 
-            reader.ReadInto(mld_level_data_ptr, 1);
+            auto mld_partition_ptr = layout.GetBlockPtr<PartitionID, true>(
+                memory_ptr, storage::DataLayout::MLD_PARTITION);
+            auto partition_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
+            util::ShM<PartitionID, true>::vector partition(mld_partition_ptr,
+                                                           partition_entries_count);
 
-            std::uint64_t size;
+            auto mld_chilren_ptr = layout.GetBlockPtr<CellID, true>(
+                memory_ptr, storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            auto children_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            util::ShM<CellID, true>::vector cell_to_children(mld_chilren_ptr,
+                                                             children_entries_count);
 
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_PARTITION));
-            reader.ReadInto(mld_partition_ptr, size);
-
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_TO_CHILDREN));
-            reader.ReadInto(mld_chilren_ptr, size);
+            partition::MultiLevelPartitionView mlp{std::move(level_data), std::move(partition), std::move(cell_to_children)};
+            partition::files::readPartition(config.mld_partition_path, mlp);
         }
 
         if (boost::filesystem::exists(config.mld_storage_path))

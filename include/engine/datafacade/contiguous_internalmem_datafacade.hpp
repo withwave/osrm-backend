@@ -911,7 +911,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
 
             auto level_data =
-                *data_layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData>(
+                data_layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData>(
                     memory_block, storage::DataLayout::MLD_LEVEL_DATA);
 
             auto mld_partition_ptr = data_layout.GetBlockPtr<PartitionID>(
