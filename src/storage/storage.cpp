@@ -11,8 +11,8 @@
 #include "extractor/travel_mode.hpp"
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
-#include "partition/multi_level_partition.hpp"
 #include "partition/files.hpp"
+#include "partition/multi_level_partition.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
@@ -651,8 +651,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<unsigned> geometry_begin_indices(
             geometries_index_ptr, layout.num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
 
-        auto geometries_node_list_ptr = layout.GetBlockPtr<NodeID, true>(
-            memory_ptr, storage::DataLayout::GEOMETRIES_NODE_LIST);
+        auto geometries_node_list_ptr =
+            layout.GetBlockPtr<NodeID, true>(memory_ptr, storage::DataLayout::GEOMETRIES_NODE_LIST);
         util::vector_view<NodeID> geometry_node_list(
             geometries_node_list_ptr,
             layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
@@ -687,12 +687,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             datasources_list_ptr, layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
 
         extractor::SegmentDataView segment_data{std::move(geometry_begin_indices),
-                                                  std::move(geometry_node_list),
-                                                  std::move(geometry_fwd_weight_list),
-                                                  std::move(geometry_rev_weight_list),
-                                                  std::move(geometry_fwd_duration_list),
-                                                  std::move(geometry_rev_duration_list),
-                                                  std::move(datasources_list)};
+                                                std::move(geometry_node_list),
+                                                std::move(geometry_fwd_weight_list),
+                                                std::move(geometry_rev_weight_list),
+                                                std::move(geometry_fwd_duration_list),
+                                                std::move(geometry_rev_duration_list),
+                                                std::move(datasources_list)};
 
         extractor::files::readSegmentData(config.geometries_path, segment_data);
     }
@@ -918,45 +918,53 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             util::ShM<CellID, true>::vector cell_to_children(mld_chilren_ptr,
                                                              children_entries_count);
 
-            partition::MultiLevelPartitionView mlp{std::move(level_data), std::move(partition), std::move(cell_to_children)};
+            partition::MultiLevelPartitionView mlp{
+                std::move(level_data), std::move(partition), std::move(cell_to_children)};
             partition::files::readPartition(config.mld_partition_path, mlp);
         }
 
         if (boost::filesystem::exists(config.mld_storage_path))
         {
-            io::FileReader reader(config.mld_storage_path, io::FileReader::VerifyFingerprint);
-            auto mld_cell_weights_ptr =
-                layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, DataLayout::MLD_CELL_WEIGHTS);
-            auto mld_source_boundary_ptr =
-                layout.GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
+
+            auto mld_cell_weights_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+                memory_ptr, storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto mld_source_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
+                memory_ptr, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
-                memory_ptr, DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
-            auto mld_cells_ptr = layout.GetBlockPtr<partition::CellStorage::CellData, true>(
-                memory_ptr, DataLayout::MLD_CELLS);
+                memory_ptr, storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto mld_cells_ptr = layout.GetBlockPtr<partition::CellStorageView::CellData, true>(
+                memory_ptr, storage::DataLayout::MLD_CELLS);
             auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
-                memory_ptr, DataLayout::MLD_CELL_LEVEL_OFFSETS);
+                memory_ptr, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            std::uint64_t size;
+            auto weight_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto source_boundary_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            auto destination_boundary_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto cells_entries_counts = layout.GetBlockEntries(storage::DataLayout::MLD_CELLS);
+            auto cell_level_offsets_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_WEIGHTS));
-            reader.ReadInto(mld_cell_weights_ptr, size);
+            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
+            util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
+                                                      source_boundary_entries_count);
+            util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
+                                                           destination_boundary_entries_count);
+            util::vector_view<partition::CellStorageView::CellData> cells(mld_cells_ptr,
+                                                                          cells_entries_counts);
+            util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
+                                                           cell_level_offsets_entries_count);
 
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_SOURCE_BOUNDARY));
-            reader.ReadInto(mld_source_boundary_ptr, size);
-
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_DESTINATION_BOUNDARY));
-            reader.ReadInto(mld_destination_boundary_ptr, size);
-
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELLS));
-            reader.ReadInto(mld_cells_ptr, size);
-
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_LEVEL_OFFSETS));
-            reader.ReadInto(mld_cell_level_offsets_ptr, size);
+            partition::CellStorageView storage{std::move(weights),
+                                               std::move(source_boundary),
+                                               std::move(destination_boundary),
+                                               std::move(cells),
+                                               std::move(level_offsets)};
+            partition::files::readCells(config.mld_storage_path, storage);
         }
 
         if (boost::filesystem::exists(config.mld_graph_path))
