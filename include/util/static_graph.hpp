@@ -17,8 +17,29 @@
 
 namespace osrm
 {
+
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace util
 {
+template <typename EdgeDataT, bool UseSharedMemory> class StaticGraph;
+
+namespace serialization
+{
+template <typename EdgeDataT, bool UseSharedMemory>
+void read(storage::io::FileReader &reader, StaticGraph<EdgeDataT, UseSharedMemory> &graph);
+
+template <typename EdgeDataT, bool UseSharedMemory>
+void write(storage::io::FileWriter &writer,
+           const StaticGraph<EdgeDataT, UseSharedMemory> &graph);
+}
 
 namespace static_graph_details
 {
@@ -99,6 +120,8 @@ EntryT edgeToEntry(const OtherEdge &from, std::false_type)
 
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
+    template <typename T> using Vector = typename util::ShM<T, UseSharedMemory>::vector;
+
   public:
     using InputEdge = static_graph_details::SortableEdgeWithData<EdgeDataT>;
     using NodeIterator = static_graph_details::NodeIterator;
@@ -122,8 +145,8 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         InitializeFromSortedEdgeRange(nodes, edges.begin(), edges.end());
     }
 
-    StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array_,
-                typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array_)
+    StaticGraph(Vector<NodeArrayEntry> node_array_,
+                Vector<EdgeArrayEntry> edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
         BOOST_ASSERT(!node_array.empty());
@@ -226,9 +249,13 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         return current_iterator;
     }
 
-    const NodeArrayEntry &GetNode(const NodeID nid) const { return node_array[nid]; }
-    const EdgeArrayEntry &GetEdge(const EdgeID eid) const { return edge_array[eid]; }
+    friend void serialization::read<EdgeDataT, UseSharedMemory>(
+        storage::io::FileReader &reader, StaticGraph<EdgeDataT, UseSharedMemory> &graph);
+    friend void serialization::write<EdgeDataT, UseSharedMemory>(
+        storage::io::FileWriter &writer, const StaticGraph<EdgeDataT, UseSharedMemory> &graph);
+
   protected:
+
     template <typename IterT>
     void InitializeFromSortedEdgeRange(const unsigned nodes, IterT begin, IterT end)
     {
@@ -258,8 +285,8 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
-    typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array;
-    typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array;
+    Vector<NodeArrayEntry> node_array;
+    Vector<EdgeArrayEntry> edge_array;
 };
 
 } // namespace util
