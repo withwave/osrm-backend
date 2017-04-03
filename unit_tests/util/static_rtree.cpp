@@ -41,11 +41,10 @@ constexpr uint32_t TEST_LEAF_NODE_SIZE = 64;
 
 using TestData = extractor::EdgeBasedNode;
 using TestStaticRTree = StaticRTree<TestData,
-                                    std::vector<Coordinate>,
                                     false,
                                     TEST_BRANCHING_FACTOR,
                                     TEST_LEAF_NODE_SIZE>;
-using MiniStaticRTree = StaticRTree<TestData, std::vector<Coordinate>, false, 2, 128>;
+using MiniStaticRTree = StaticRTree<TestData, false, 2, 128>;
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
 constexpr unsigned RANDOM_SEED = 42;
@@ -273,7 +272,7 @@ void construction_test(const std::string &prefix, FixtureT *fixture)
 
 BOOST_FIXTURE_TEST_CASE(construct_tiny, TestRandomGraphFixture_10_30)
 {
-    using TinyTestTree = StaticRTree<TestData, std::vector<Coordinate>, false, 2, 64>;
+    using TinyTestTree = StaticRTree<TestData, false, 2, 64>;
     construction_test<TinyTestTree>("test_tiny", this);
 }
 
