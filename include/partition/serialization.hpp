@@ -33,21 +33,26 @@ inline void write(storage::io::FileWriter &writer,
     writer.SerializeVector(graph.node_to_edge_offset);
 }
 
-template <bool UseShareMemory> inline void read(storage::io::FileReader &reader, detail::MultiLevelPartitionImpl<UseShareMemory> &mlp)
+template <bool UseShareMemory>
+inline void read(storage::io::FileReader &reader,
+                 detail::MultiLevelPartitionImpl<UseShareMemory> &mlp)
 {
     reader.ReadInto(*mlp.level_data);
     reader.DeserializeVector(mlp.partition);
     reader.DeserializeVector(mlp.cell_to_children);
 }
 
-template <bool UseShareMemory> inline void write(storage::io::FileWriter &writer, const detail::MultiLevelPartitionImpl<UseShareMemory> &mlp)
+template <bool UseShareMemory>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::MultiLevelPartitionImpl<UseShareMemory> &mlp)
 {
     writer.WriteOne(*mlp.level_data);
     writer.SerializeVector(mlp.partition);
     writer.SerializeVector(mlp.cell_to_children);
 }
 
-template <bool UseShareMemory> inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<UseShareMemory> &storage)
+template <bool UseShareMemory>
+inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<UseShareMemory> &storage)
 {
     reader.DeserializeVector(storage.weights);
     reader.DeserializeVector(storage.source_boundary);
@@ -56,7 +61,9 @@ template <bool UseShareMemory> inline void read(storage::io::FileReader &reader,
     reader.DeserializeVector(storage.level_to_cell_offset);
 }
 
-template <bool UseShareMemory> inline void write(storage::io::FileWriter &writer, const detail::CellStorageImpl<UseShareMemory> &storage)
+template <bool UseShareMemory>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::CellStorageImpl<UseShareMemory> &storage)
 {
     writer.SerializeVector(storage.weights);
     writer.SerializeVector(storage.source_boundary);

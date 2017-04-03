@@ -95,10 +95,7 @@ template <typename T, bool UseSharedMemory> class PackedVector
         num_elements++;
     }
 
-    T operator[](const std::size_t index) const
-    {
-        return at(index);
-    }
+    T operator[](const std::size_t index) const { return at(index); }
 
     T at(const std::size_t a_index) const
     {

@@ -48,8 +48,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::vector<std::uint32_t> &turn_lane_offsets,
     std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks,
     guidance::LaneDescriptionMap &lane_description_map)
-    : m_max_edge_id(0), m_coordinates(coordinates),
-      m_osm_node_ids(osm_node_ids),
+    : m_max_edge_id(0), m_coordinates(coordinates), m_osm_node_ids(osm_node_ids),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
@@ -540,16 +539,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
 
                     const auto &from_node =
-                        isTrivial
-                            ? m_osm_node_ids[node_along_road_entering]
-                            : m_osm_node_ids[m_compressed_edge_container.GetLastEdgeSourceID(
-                                  incoming_edge)];
+                        isTrivial ? m_osm_node_ids[node_along_road_entering]
+                                  : m_osm_node_ids[m_compressed_edge_container.GetLastEdgeSourceID(
+                                        incoming_edge)];
                     const auto &via_node =
                         m_osm_node_ids[m_compressed_edge_container.GetLastEdgeTargetID(
                             incoming_edge)];
                     const auto &to_node =
-                        m_osm_node_ids[m_compressed_edge_container.GetFirstEdgeTargetID(
-                            turn.eid)];
+                        m_osm_node_ids[m_compressed_edge_container.GetFirstEdgeTargetID(turn.eid)];
 
                     lookup::TurnIndexBlock turn_index_block = {from_node, via_node, to_node};
 

@@ -687,7 +687,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.GetBlockPtr<util::Coordinate, true>(memory_ptr, DataLayout::COORDINATE_LIST);
         const auto osmnodeid_ptr =
             layout.GetBlockPtr<std::uint64_t, true>(memory_ptr, DataLayout::OSM_NODE_ID_LIST);
-        util::vector_view<util::Coordinate> coordinates(coordinates_ptr, layout.num_entries[DataLayout::COORDINATE_LIST]);
+        util::vector_view<util::Coordinate> coordinates(
+            coordinates_ptr, layout.num_entries[DataLayout::COORDINATE_LIST]);
         util::PackedVectorView<OSMNodeID> osm_node_ids;
         osm_node_ids.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
 

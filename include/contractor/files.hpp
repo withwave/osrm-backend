@@ -15,7 +15,7 @@ namespace files
 {
 
 // reads .osrm.hsgr file
-template<bool UseSharedMemory>
+template <bool UseSharedMemory>
 inline void readGraph(const boost::filesystem::path &path,
                       unsigned &checksum,
                       detail::QueryGraph<UseSharedMemory> &graph)
@@ -28,7 +28,7 @@ inline void readGraph(const boost::filesystem::path &path,
 }
 
 // writes .osrm.hsgr file
-template<bool UseSharedMemory>
+template <bool UseSharedMemory>
 inline void writeGraph(const boost::filesystem::path &path,
                        unsigned checksum,
                        const detail::QueryGraph<UseSharedMemory> &graph)
@@ -39,7 +39,6 @@ inline void writeGraph(const boost::filesystem::path &path,
     writer.WriteOne(checksum);
     util::serialization::write(writer, graph);
 }
-
 }
 }
 }

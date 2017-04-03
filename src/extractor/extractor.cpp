@@ -509,9 +509,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     };
 
     compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
-        WriteCompressedNodeBasedGraph(config.compressed_node_based_graph_output_path,
-                                      *node_based_graph,
-                                      coordinates);
+        WriteCompressedNodeBasedGraph(
+            config.compressed_node_based_graph_output_path, *node_based_graph, coordinates);
     });
 
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);

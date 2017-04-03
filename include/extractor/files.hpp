@@ -18,10 +18,10 @@ namespace files
 {
 
 // reads .osrm.nodes
-template<bool UseShareMemory>
+template <bool UseShareMemory>
 inline void readNodes(const boost::filesystem::path &path,
-        typename util::ShM<util::Coordinate, UseShareMemory>::vector &coordinates,
-        util::detail::PackedVector<OSMNodeID, UseShareMemory> &osm_node_ids)
+                      typename util::ShM<util::Coordinate, UseShareMemory>::vector &coordinates,
+                      util::detail::PackedVector<OSMNodeID, UseShareMemory> &osm_node_ids)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -31,10 +31,11 @@ inline void readNodes(const boost::filesystem::path &path,
 }
 
 // writes .osrm.nodes
-template<bool UseShareMemory>
-inline void writeNodes(const boost::filesystem::path &path,
-        const typename util::ShM<util::Coordinate, UseShareMemory>::vector &coordinates,
-        const util::detail::PackedVector<OSMNodeID, UseShareMemory> &osm_node_ids)
+template <bool UseShareMemory>
+inline void
+writeNodes(const boost::filesystem::path &path,
+           const typename util::ShM<util::Coordinate, UseShareMemory>::vector &coordinates,
+           const util::detail::PackedVector<OSMNodeID, UseShareMemory> &osm_node_ids)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -126,9 +127,10 @@ inline void writeTurnData(const boost::filesystem::path &path,
 
 // reads .osrm.tls
 template <bool UseShareMemory>
-inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
-                         typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
-                         typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector &turn_masks)
+inline void readTurnLaneDescriptions(
+    const boost::filesystem::path &path,
+    typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
+    typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector &turn_masks)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -139,9 +141,11 @@ inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
 
 // writes .osrm.tls
 template <bool UseShareMemory>
-inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
-                         const typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
-                         const typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector &turn_masks)
+inline void writeTurnLaneDescriptions(
+    const boost::filesystem::path &path,
+    const typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
+    const typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector
+        &turn_masks)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -149,7 +153,6 @@ inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
     writer.SerializeVector(turn_offsets);
     writer.SerializeVector(turn_masks);
 }
-
 }
 }
 }

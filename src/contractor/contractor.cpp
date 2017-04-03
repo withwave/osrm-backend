@@ -1,6 +1,6 @@
 #include "contractor/contractor.hpp"
-#include "contractor/files.hpp"
 #include "contractor/crc32_processor.hpp"
+#include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
 
@@ -138,9 +138,8 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
     core_marker_output_file.WriteFrom(unpacked_bool_flags.data(), count);
 }
 
-void
-Contractor::WriteContractedGraph(unsigned max_node_id,
-                                 util::DeallocatingVector<QueryEdge> contracted_edge_list)
+void Contractor::WriteContractedGraph(unsigned max_node_id,
+                                      util::DeallocatingVector<QueryEdge> contracted_edge_list)
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
@@ -150,7 +149,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     RangebasedCRC32 crc32_calculator;
     const unsigned checksum = crc32_calculator(contracted_edge_list);
 
-    QueryGraph query_graph {max_node_id+1, contracted_edge_list};
+    QueryGraph query_graph{max_node_id + 1, contracted_edge_list};
 
     files::writeGraph(config.graph_output_path, checksum, query_graph);
 }

@@ -37,8 +37,7 @@ template <typename EdgeDataT, bool UseSharedMemory>
 void read(storage::io::FileReader &reader, StaticGraph<EdgeDataT, UseSharedMemory> &graph);
 
 template <typename EdgeDataT, bool UseSharedMemory>
-void write(storage::io::FileWriter &writer,
-           const StaticGraph<EdgeDataT, UseSharedMemory> &graph);
+void write(storage::io::FileWriter &writer, const StaticGraph<EdgeDataT, UseSharedMemory> &graph);
 }
 
 namespace static_graph_details
@@ -145,8 +144,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         InitializeFromSortedEdgeRange(nodes, edges.begin(), edges.end());
     }
 
-    StaticGraph(Vector<NodeArrayEntry> node_array_,
-                Vector<EdgeArrayEntry> edge_array_)
+    StaticGraph(Vector<NodeArrayEntry> node_array_, Vector<EdgeArrayEntry> edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
         BOOST_ASSERT(!node_array.empty());
@@ -249,13 +247,13 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         return current_iterator;
     }
 
-    friend void serialization::read<EdgeDataT, UseSharedMemory>(
-        storage::io::FileReader &reader, StaticGraph<EdgeDataT, UseSharedMemory> &graph);
+    friend void
+    serialization::read<EdgeDataT, UseSharedMemory>(storage::io::FileReader &reader,
+                                                    StaticGraph<EdgeDataT, UseSharedMemory> &graph);
     friend void serialization::write<EdgeDataT, UseSharedMemory>(
         storage::io::FileWriter &writer, const StaticGraph<EdgeDataT, UseSharedMemory> &graph);
 
   protected:
-
     template <typename IterT>
     void InitializeFromSortedEdgeRange(const std::uint32_t nodes, IterT begin, IterT end)
     {
@@ -271,7 +269,9 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
             unsigned offset = std::distance(begin, iter);
             node_array.push_back(NodeArrayEntry{offset});
         }
-        BOOST_ASSERT_MSG(iter == end, ("Still " + std::to_string(std::distance(iter, end)) + " edges left.").c_str());
+        BOOST_ASSERT_MSG(
+            iter == end,
+            ("Still " + std::to_string(std::distance(iter, end)) + " edges left.").c_str());
         BOOST_ASSERT(node_array.size() == number_of_nodes + 1);
 
         edge_array.resize(number_of_edges);

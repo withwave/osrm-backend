@@ -245,7 +245,7 @@ class DeallocatingVector
         current_size = std::move(other.current_size);
     }
 
-    DeallocatingVector& operator=(DeallocatingVector &&other)
+    DeallocatingVector &operator=(DeallocatingVector &&other)
     {
         bucket_list = std::move(other.bucket_list);
         current_size = std::move(other.current_size);
